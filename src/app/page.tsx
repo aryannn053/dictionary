@@ -1,10 +1,29 @@
-'use client'
+'use client';
 import { useState } from "react";
 
+interface Definition {
+  definition: string;
+  example?: string;
+  synonyms?: string[];
+}
+
+interface Meaning {
+  partOfSpeech: string;
+  definitions: Definition[];
+  synonyms: string[];
+}
+
+interface WordData {
+  word: string;
+  phonetic?: string;
+  meanings: Meaning[];
+  sourceUrls?: string[];
+}
+
 export default function Home() {
-  const [word, setWord] = useState("");
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState("");
+  const [word, setWord] = useState<string>("");
+  const [data, setData] = useState<WordData | null>(null);
+  const [error, setError] = useState<string>("");
 
   const fetchMeaning = async () => {
     if (!word.trim()) {
@@ -16,10 +35,14 @@ export default function Home() {
     try {
       const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       if (!response.ok) throw new Error("Word not found");
-      const result = await response.json();
+      const result: WordData[] = await response.json();
       setData(result[0]);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred");
+      }
       setData(null);
     }
   };
@@ -60,11 +83,11 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-2">{data.word}</h2>
             <p className="text-lg text-purple-500 mb-4">{data.phonetic || "No phonetic available"}</p>
 
-            {data.meanings.map((meaning: any, index: number) => (
+            {data.meanings.map((meaning, index) => (
               <div key={index} className="mb-6">
                 <h3 className="text-xl font-semibold">{meaning.partOfSpeech}</h3>
                 <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mt-2">
-                  {meaning.definitions.map((def: any, idx: number) => (
+                  {meaning.definitions.map((def, idx) => (
                     <li key={idx}>{def.definition}</li>
                   ))}
                 </ul>
@@ -72,13 +95,11 @@ export default function Home() {
             ))}
 
             {/* Synonyms */}
-            {data.meanings.some((m: any) => m.synonyms.length > 0) && (
+            {data.meanings.some((m) => m.synonyms.length > 0) && (
               <div className="mt-4">
                 <h3 className="text-xl font-semibold">Synonyms</h3>
                 <p className="py-1">
-                  {data.meanings
-                    .flatMap((m: any) => m.synonyms)
-                    .join(", ") || "No synonyms available"}
+                  {data.meanings.flatMap((m) => m.synonyms).join(", ") || "No synonyms available"}
                 </p>
               </div>
             )}
