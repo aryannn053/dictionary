@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface Definition {
   definition: string;
@@ -25,7 +25,7 @@ export default function Home() {
   const [data, setData] = useState<WordData | null>(null);
   const [error, setError] = useState<string>("");
 
-  const fetchMeaning = async () => {
+  const fetchMeaning = useCallback(async () => {
     if (!word.trim()) {
       setError("Please enter a word");
       setData(null);
@@ -45,7 +45,7 @@ export default function Home() {
       }
       setData(null);
     }
-  };
+  }, [word]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 flex flex-col items-center py-6 px-4">
