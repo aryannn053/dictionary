@@ -1,101 +1,105 @@
-import Image from "next/image";
+'use client'
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [word, setWord] = useState("");
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const fetchMeaning = async () => {
+    if (!word.trim()) {
+      setError("Please enter a word");
+      setData(null);
+      return;
+    }
+    setError("");
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+      if (!response.ok) throw new Error("Word not found");
+      const result = await response.json();
+      setData(result[0]);
+    } catch (err: any) {
+      setError(err.message);
+      setData(null);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 flex flex-col items-center py-6 px-4">
+      <div className="w-full max-w-3xl">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Dictionary App</h1>
+        </header>
+
+        {/* Search Bar */}
+        <div className="flex w-full">
+          <div className="flex items-center bg-white dark:bg-gray-800 shadow-md rounded-md py-3 px-8 w-full">
+            <input
+              type="text"
+              value={word}
+              onChange={(e) => setWord(e.target.value)}
+              placeholder="Search for a word..."
+              className="flex-1 bg-transparent outline-none text-lg"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+          <button
+            onClick={fetchMeaning}
+            className="ml-3 p-2 bg-purple-500 text-white rounded-md shadow w-[150px] hover:bg-purple-600"
           >
-            Read our docs
-          </a>
+            Search
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Error Message */}
+        {error && <p className="mt-4 text-red-500">{error}</p>}
+
+        {/* Word Information */}
+        {data && (
+          <div className="mt-6 py-8">
+            <h2 className="text-4xl font-bold mb-2">{data.word}</h2>
+            <p className="text-lg text-purple-500 mb-4">{data.phonetic || "No phonetic available"}</p>
+
+            {data.meanings.map((meaning: any, index: number) => (
+              <div key={index} className="mb-6">
+                <h3 className="text-xl font-semibold">{meaning.partOfSpeech}</h3>
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mt-2">
+                  {meaning.definitions.map((def: any, idx: number) => (
+                    <li key={idx}>{def.definition}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {/* Synonyms */}
+            {data.meanings.some((m: any) => m.synonyms.length > 0) && (
+              <div className="mt-4">
+                <h3 className="text-xl font-semibold">Synonyms</h3>
+                <p className="py-1">
+                  {data.meanings
+                    .flatMap((m: any) => m.synonyms)
+                    .join(", ") || "No synonyms available"}
+                </p>
+              </div>
+            )}
+
+            {/* Source */}
+            {data.sourceUrls && (
+              <p className="mt-6 text-sm">
+                Source:{" "}
+                <a
+                  href={data.sourceUrls[0]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-500 underline"
+                >
+                  {data.sourceUrls[0]}
+                </a>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
